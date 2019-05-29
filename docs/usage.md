@@ -308,12 +308,6 @@ user = remoteclient.use('使用客户端类型，可选 yh_client, ht_client 等
 ```
 
 
-#### 雪球组合调仓
-
-```python
-user.adjust_weight('000001', 10)
-```
-
 
 ### 跟踪 joinquant / ricequant  的模拟交易
 
@@ -375,15 +369,6 @@ xq_follower.login(cookies='雪球 cookies，登陆后获取，获取方式见 ht
 ```
 xq_follower.follow(xq_user, 'xq组合ID，类似ZH123456', total_assets=100000)
 ```
-
-
-注: 雪球组合是以百分比调仓的， 所以需要额外设置组合对应的资金额度
-
-* 这里可以设置 total_assets, 为当前组合的净值对应的总资金额度, 具体可以参考参数说明
-* 或者设置 initial_assets, 这时候总资金额度为 initial_assets * 组合净值
-
-* 雪球额外支持 adjust_sell 参数，决定是否根据用户的实际持仓数调整卖出股票数量，解决雪球根据百分比调仓时计算出的股数有偏差的问题。当卖出股票数大于实际持仓数时，调整为实际持仓数。目前仅在银河客户端测试通过。 当 users 为多个时，根据第一个 user 的持仓数决定
-
 
 #### 多用户跟踪多策略
 

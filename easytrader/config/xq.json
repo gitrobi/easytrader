@@ -8,5 +8,6 @@
   "referer": "https://xueqiu.com/p/update?action=holdings&symbol=%s",
   "portfolio_gids": "https://tc.xueqiu.com/tc/snowx/MONI/trans_group/list.json",
   "performances_url": "https://tc.xueqiu.com/tc/snowx//MONI/performances.json?gid=%s",
-  "trade_url": "https://tc.xueqiu.com/tc/snowx/MONI/transaction/add.json"
+  "trade_url": "https://tc.xueqiu.com/tc/snowx/MONI/transaction/add.json",
+  "search_url" : "https://xueqiu.com/stock/search.json?code=%s"
 }

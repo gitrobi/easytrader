@@ -1,0 +1,20 @@
+{
+  "q": "SZ000004",
+  "page": 1,
+  "size": 10,
+  "stocks": [
+    {
+      "code": "SZ000004",
+      "name": "国农科技",
+      "enName": "",
+      "hasexist": "false",
+      "flag": null,
+      "type": 11,
+      "stock_id": 1001088,
+      "ind_id": 0,
+      "ind_name": "医药生物",
+      "ind_color": null,
+      "_source": "sc_1:1:sz000004"
+    }
+  ]
+}

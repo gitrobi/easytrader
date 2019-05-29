@@ -1,0 +1,60 @@
+[
+  {
+    "result_data": {
+      "id": null,
+      "tid": 3033471015775159,
+      "uid": 3547092875,
+      "symbol": "SZ000004",
+      "name": "国农科技",
+      "type": 2,
+      "time": 1559059200000,
+      "shares": 100.0,
+      "price": 22.59,
+      "comment": "",
+      "commission": 1.0,
+      "tax": 0.0,
+      "gid": 3032888057637915,
+      "commission_rate": null,
+      "tax_rate": null,
+      "unit_shares": null,
+      "unit_dividend": null,
+      "unit_increase_shares": null,
+      "record_date": null,
+      "type_name": "卖出",
+      "desc": "",
+      "amount": 2259.0
+    },
+    "msg": "下单成功",
+    "result_code": "60000",
+    "success": true
+  },
+  {
+    "result_data": {
+      "id": null,
+      "tid": 3033362030770608,
+      "uid": 3547092875,
+      "symbol": "SZ000004",
+      "name": "国农科技",
+      "type": 1,
+      "time": 1559059200000,
+      "shares": 100.0,
+      "price": 22.59,
+      "comment": "100",
+      "commission": 1.0,
+      "tax": 0.0,
+      "gid": 3032888057637915,
+      "commission_rate": null,
+      "tax_rate": null,
+      "unit_shares": null,
+      "unit_dividend": null,
+      "unit_increase_shares": null,
+      "record_date": null,
+      "type_name": "买入",
+      "desc": "",
+      "amount": 2259.0
+    },
+    "msg": "下单成功",
+    "result_code": "60000",
+    "success": true
+  }
+]

@@ -4,6 +4,7 @@ import numbers
 import os
 import re
 import time
+import datetime
 
 import requests
 
@@ -14,11 +15,20 @@ from .log import log
 class XueQiuTrader(webtrader.WebTrader):
     config_path = os.path.dirname(__file__) + "/config/xq.json"
 
+    @staticmethod
+    def _time_strftime(time_stamp):
+        try:
+            local_time = time.localtime(time_stamp / 1000)
+            return time.strftime("%Y-%m-%d %H:%M:%S", local_time)
+        # pylint: disable=broad-except
+        except Exception:
+            return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+
     _HEADERS = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) "
         "AppleWebKit/537.36 (KHTML, like Gecko) "
         "Chrome/64.0.3282.167 Safari/537.36",
-        "Host": "tc.xueqiu.com",
+        #"Host": "xueqiu.com",
         "Pragma": "no-cache",
         "Connection": "keep-alive",
         "Accept": "*/*",
@@ -52,6 +62,8 @@ class XueQiuTrader(webtrader.WebTrader):
         :return:
         """
         self._set_cookies(self.account_config["cookies"])
+        portfolio_code = self.account_config.get("portfolio_code", "ch")
+        self._gid = self._get_portfolio_gid(portfolio_code)
 
     def _set_cookies(self, cookies):
         """设置雪球 cookies，代码来自于
@@ -94,29 +106,16 @@ class XueQiuTrader(webtrader.WebTrader):
         """
         return virtual * self.multiple
 
-    def _get_html(self, url):
-        return self.s.get(url).text
-
     def _search_stock_info(self, code):
         """
         通过雪球的接口获取股票详细信息
         :param code: 股票代码 000001
-        :return: 查询到的股票 {u'stock_id': 1000279, u'code': u'SH600325',
-            u'name': u'华发股份', u'ind_color': u'#d9633b', u'chg': -1.09,
-            u'ind_id': 100014, u'percent': -9.31, u'current': 10.62,
-            u'hasexist': None, u'flag': 1, u'ind_name': u'房地产', u'type': None,
-            u'enName': None}
-            ** flag : 未上市(0)、正常(1)、停牌(2)、涨跌停(3)、退市(4)
+        :return:
         """
-        data = {
-            "code": str(code),
-            "size": "300",
-            "key": "47bce5c74f",
-            "market": self.account_config["portfolio_market"],
-        }
-        r = self.s.get(self.config["search_stock_url"], params=data)
-        stocks = json.loads(r.text)
-        stocks = stocks["stocks"]
+        url = self.config["search_url"] % (code)
+        r = self.s.get(url)
+        resjson = r.json()
+        stocks = resjson.get('stocks', None)
         stock = None
         if len(stocks) > 0:
             stock = stocks[0]
@@ -142,9 +141,8 @@ class XueQiuTrader(webtrader.WebTrader):
             raise Exception("cannot get trans_groups gid for '%s'"(portfolio_code))
         return gid
 
-    def _get_performances(self, portfolio_code):
-        gid = self._get_portfolio_gid(portfolio_code)
-        url = self.config["performances_url"] % (gid)
+    def _get_performances(self):
+        url = self.config["performances_url"] % (self._gid)
         r = self.s.get(url)
         resjson = r.json()
         result_code = resjson['result_code']
@@ -152,7 +150,7 @@ class XueQiuTrader(webtrader.WebTrader):
         if result_code == '60000':
             performances = result_data.get('performances', None)
         if performances is None:
-            raise Exception("cannot get performances for '%s'"(portfolio_code))
+            raise Exception("cannot get performances for '%s'"(self._gid))
         return performances
 
     def get_balance(self):
@@ -160,11 +158,10 @@ class XueQiuTrader(webtrader.WebTrader):
         获取账户资金状况
         :return:
         """
-        portfolio_code = self.account_config.get("portfolio_code", "ch")
-        performances = self._get_performances(portfolio_code)
+        performances = self._get_performances()
         performance = performances[1]
+        # xq_positions = performance['list']
         asset_balance = performance['assets']
-        position = performance['list']
         cash = performance['cash']
         market = performance['market_value']
         return [
@@ -178,70 +175,20 @@ class XueQiuTrader(webtrader.WebTrader):
             }
         ]
 
-    def _get_position(self):
-        """
-        获取雪球持仓
-        :return:
-        """
-        portfolio_code = self.account_config.get("portfolio_code", "ch")
-        performances = self._get_performances(portfolio_code)
-        performance = performances[1]
-        position = performance['list']
-        return position
-
-    @staticmethod
-    def _time_strftime(time_stamp):
-        try:
-            local_time = time.localtime(time_stamp / 1000)
-            return time.strftime("%Y-%m-%d %H:%M:%S", local_time)
-        # pylint: disable=broad-except
-        except Exception:
-            return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-
     def get_position(self):
         """
         获取持仓
         :return:
         """
-        xq_positions = self._get_position()
-        balance = self.get_balance()[0]
-        position_list = []
-        for pos in xq_positions:
-            position_list.append(
-                {
-                    "cost_price": pos['hold_cost'],
-                    "current_amount": pos['shares'],
-                    "enable_amount": pos['shares'],
-                    "income_balance": pos['accum_amount'],
-                    "keep_cost_price": pos['hold_cost'],
-                    "last_price": pos['current'],
-                    "market_value": pos['market_value'],
-                    "position_str": "random",
-                    "stock_code": pos["symbol"],
-                    "stock_name": pos["name"],
-                }
-            )
-        return position_list
-
-    def _get_xq_history(self):
-        """
-        获取雪球调仓历史
-        :param instance:
-        :param owner:
-        :return:
-        """
-        data = {
-            "cube_symbol": str(self.account_config["portfolio_code"]),
-            "count": 20,
-            "page": 1,
-        }
-        resp = self.s.get(self.config["history_url"], params=data)
-        res = json.loads(resp.text)
-        return res["list"]
+        performances = self._get_performances()
+        performance = performances[1]
+        xq_positions = performance['list']
+        return xq_positions
 
     @property
     def history(self):
-        return self._get_xq_history()
+        log.warning("雪球新版不支持委托")
+        return None
 
     def get_entrust(self):
         """
@@ -249,39 +196,8 @@ class XueQiuTrader(webtrader.WebTrader):
         操作数量都按1手模拟换算的
         :return:
         """
-        xq_entrust_list = self._get_xq_history()
-        entrust_list = []
-        replace_none = lambda s: s or 0
-        for xq_entrusts in xq_entrust_list:
-            status = xq_entrusts["status"]  # 调仓状态
-            if status == "pending":
-                status = "已报"
-            elif status in ["canceled", "failed"]:
-                status = "废单"
-            else:
-                status = "已成"
-            for entrust in xq_entrusts["rebalancing_histories"]:
-                price = entrust["price"]
-                entrust_list.append(
-                    {
-                        "entrust_no": entrust["id"],
-                        "entrust_bs": u"买入"
-                        if entrust["target_weight"]
-                        > replace_none(entrust["prev_weight"])
-                        else u"卖出",
-                        "report_time": self._time_strftime(
-                            entrust["updated_at"]
-                        ),
-                        "entrust_status": status,
-                        "stock_code": entrust["stock_symbol"],
-                        "stock_name": entrust["stock_name"],
-                        "business_amount": 100,
-                        "business_price": price,
-                        "entrust_amount": 100,
-                        "entrust_price": price,
-                    }
-                )
-        return entrust_list
+        log.warning("雪球新版不支持委托")
+        return None
 
     def cancel_entrust(self, entrust_no):
         """
@@ -289,40 +205,7 @@ class XueQiuTrader(webtrader.WebTrader):
         :param entrust_no:
         :return:
         """
-        xq_entrust_list = self._get_xq_history()
-        is_have = False
-        for xq_entrusts in xq_entrust_list:
-            status = xq_entrusts["status"]  # 调仓状态
-            for entrust in xq_entrusts["rebalancing_histories"]:
-                if entrust["id"] == entrust_no and status == "pending":
-                    is_have = True
-                    buy_or_sell = (
-                        "buy"
-                        if entrust["target_weight"] < entrust["weight"]
-                        else "sell"
-                    )
-                    if (
-                        entrust["target_weight"] == 0
-                        and entrust["weight"] == 0
-                    ):
-                        raise exceptions.TradeError(u"移除的股票操作无法撤销,建议重新买入")
-                    balance = self.get_balance()[0]
-                    volume = (
-                        abs(entrust["target_weight"] - entrust["weight"])
-                        * balance["asset_balance"]
-                        / 100
-                    )
-                    r = self._trade(
-                        security=entrust["stock_symbol"],
-                        volume=volume,
-                        entrust_bs=buy_or_sell,
-                    )
-                    if len(r) > 0 and "error_info" in r[0]:
-                        raise exceptions.TradeError(
-                            u"撤销失败!%s" % ("error_info" in r[0])
-                        )
-        if not is_have:
-            raise exceptions.TradeError(u"撤销对象已失效")
+        log.warning("雪球新版不支持委托")
         return True
 
     def adjust_weight(self, stock_code, weight):
@@ -331,231 +214,97 @@ class XueQiuTrader(webtrader.WebTrader):
         :param stock_code: str 股票代码
         :param weight: float 调整之后的持仓百分比， 0 - 100 之间的浮点数
         """
-
-        stock = self._search_stock_info(stock_code)
-        if stock is None:
-            raise exceptions.TradeError(u"没有查询要操作的股票信息")
-        if stock["flag"] != 1:
-            raise exceptions.TradeError(u"未上市、停牌、涨跌停、退市的股票无法操作。")
-
-        # 仓位比例向下取两位数
-        weight = round(weight, 2)
-        # 获取原有仓位信息
-        position_list = self._get_position()
-
-        # 调整后的持仓
-        for position in position_list:
-            if position["stock_id"] == stock["stock_id"]:
-                position["proactive"] = True
-                position["weight"] = weight
-
-        if weight != 0 and stock["stock_id"] not in [
-            k["stock_id"] for k in position_list
-        ]:
-            position_list.append(
-                {
-                    "code": stock["code"],
-                    "name": stock["name"],
-                    "enName": stock["enName"],
-                    "hasexist": stock["hasexist"],
-                    "flag": stock["flag"],
-                    "type": stock["type"],
-                    "current": stock["current"],
-                    "chg": stock["chg"],
-                    "percent": str(stock["percent"]),
-                    "stock_id": stock["stock_id"],
-                    "ind_id": stock["ind_id"],
-                    "ind_name": stock["ind_name"],
-                    "ind_color": stock["ind_color"],
-                    "textname": stock["name"],
-                    "segment_name": stock["ind_name"],
-                    "weight": weight,
-                    "url": "/S/" + stock["code"],
-                    "proactive": True,
-                    "price": str(stock["current"]),
-                }
-            )
-
-        remain_weight = 100 - sum(i.get("weight") for i in position_list)
-        cash = round(remain_weight, 2)
-        log.debug("调仓比例:%f, 剩余持仓 :%f", weight, remain_weight)
-        data = {
-            "cash": cash,
-            "holdings": str(json.dumps(position_list)),
-            "cube_symbol": str(self.account_config["portfolio_code"]),
-            "segment": "true",
-            "comment": "",
-        }
-
-        try:
-            resp = self.s.post(self.config["rebalance_url"], data=data)
-        # pylint: disable=broad-except
-        except Exception as e:
-            log.warning("调仓失败: %s ", e)
-            return None
-        log.debug("调仓 %s: 持仓比例%d", stock["name"], weight)
-        resp_json = json.loads(resp.text)
-        if "error_description" in resp_json and resp.status_code != 200:
-            log.error("调仓错误: %s", resp_json["error_description"])
-            return [
-                {
-                    "error_no": resp_json["error_code"],
-                    "error_info": resp_json["error_description"],
-                }
-            ]
-        log.debug("调仓成功 %s: 持仓比例%d", stock["name"], weight)
+        log.warning("雪球新版不支持调仓")
         return None
 
-    def _trade(self, security, price=0, amount=0, volume=0, entrust_bs="buy"):
+    def _trade(self, security, price=0, shares=0, amount=0, entrust_bs="buy"):
         """
         调仓
         :param security:
         :param price:
+        :param shares:
         :param amount:
-        :param volume:
         :param entrust_bs:
         :return:
         """
         stock = self._search_stock_info(security)
         balance = self.get_balance()[0]
+
         if stock is None:
             raise exceptions.TradeError(u"没有查询要操作的股票信息")
-        if not volume:
-            volume = int(float(price) * amount)  # 可能要取整数
-        if balance["current_balance"] < volume and entrust_bs == "buy":
+        if not amount:
+            amount = price * shares
+        if balance["current_balance"] < amount and entrust_bs == "buy":
             raise exceptions.TradeError(u"没有足够的现金进行操作")
-        if stock["flag"] != 1:
-            raise exceptions.TradeError(u"未上市、停牌、涨跌停、退市的股票无法操作。")
-        if volume == 0:
+        if amount == 0:
             raise exceptions.TradeError(u"操作金额不能为零")
 
-        # 计算调仓调仓份额
-        weight = volume / balance["asset_balance"] * 100
-        weight = round(weight, 2)
-
         # 获取原有仓位信息
-        position_list = self._get_position()
+        position_list = self.get_position()
 
         # 调整后的持仓
         is_have = False
         for position in position_list:
-            if position["stock_id"] == stock["stock_id"]:
+            if position["symbol"] == stock["code"]:
                 is_have = True
-                position["proactive"] = True
-                old_weight = position["weight"]
-                if entrust_bs == "buy":
-                    position["weight"] = weight + old_weight
-                else:
-                    if weight > old_weight:
+                old_shares = position["shares"]
+                if entrust_bs == "sell":
+                    if shares > old_shares:
                         raise exceptions.TradeError(u"操作数量大于实际可卖出数量")
-                    else:
-                        position["weight"] = old_weight - weight
-                position["weight"] = round(position["weight"], 2)
+
         if not is_have:
-            if entrust_bs == "buy":
-                position_list.append(
-                    {
-                        "code": stock["code"],
-                        "name": stock["name"],
-                        "enName": stock["enName"],
-                        "hasexist": stock["hasexist"],
-                        "flag": stock["flag"],
-                        "type": stock["type"],
-                        "current": stock["current"],
-                        "chg": stock["chg"],
-                        "percent": str(stock["percent"]),
-                        "stock_id": stock["stock_id"],
-                        "ind_id": stock["ind_id"],
-                        "ind_name": stock["ind_name"],
-                        "ind_color": stock["ind_color"],
-                        "textname": stock["name"],
-                        "segment_name": stock["ind_name"],
-                        "weight": round(weight, 2),
-                        "url": "/S/" + stock["code"],
-                        "proactive": True,
-                        "price": str(stock["current"]),
-                    }
-                )
-            else:
+            if entrust_bs == "sell":
                 raise exceptions.TradeError(u"没有持有要卖出的股票")
 
         if entrust_bs == "buy":
-            cash = (
-                (balance["current_balance"] - volume)
-                / balance["asset_balance"]
-                * 100
-            )
-        else:
-            cash = (
-                (balance["current_balance"] + volume)
-                / balance["asset_balance"]
-                * 100
-            )
-        cash = round(cash, 2)
-        log.debug("weight:%f, cash:%f", weight, cash)
+            type = 1
+        else: # "sell"
+            type = 2
+
+        today = datetime.date.today().strftime("%Y-%m-%d")
+        tax = 0
+        commission = 0
 
         data = {
-            "cash": cash,
-            "holdings": str(json.dumps(position_list)),
-            "cube_symbol": str(self.account_config["portfolio_code"]),
-            "segment": 1,
-            "comment": "",
+            "type": type,
+            "date": today,
+            "comment": None,
+            "gid": self._gid,
+            "symbol": security,
+            "price": price,
+            "shares": shares,
+            "tax": tax,
+            "commission": commission
         }
 
         try:
-            resp = self.s.post(self.config["rebalance_url"], data=data)
-        # pylint: disable=broad-except
+            res = self.s.post(self.config["trade_url"], data=data)
         except Exception as e:
-            log.warning("调仓失败: %s ", e)
+            log.warning("交易失败: %s ", e)
             return None
         else:
-            log.debug(
-                "调仓 %s%s: %d", entrust_bs, stock["name"], resp.status_code
-            )
-            resp_json = json.loads(resp.text)
-            if "error_description" in resp_json and resp.status_code != 200:
-                log.error("调仓错误: %s", resp_json["error_description"])
-                return [
-                    {
-                        "error_no": resp_json["error_code"],
-                        "error_info": resp_json["error_description"],
-                    }
-                ]
-            return [
-                {
-                    "entrust_no": resp_json["id"],
-                    "init_date": self._time_strftime(resp_json["created_at"]),
-                    "batch_no": "委托批号",
-                    "report_no": "申报号",
-                    "seat_no": "席位编号",
-                    "entrust_time": self._time_strftime(
-                        resp_json["updated_at"]
-                    ),
-                    "entrust_price": price,
-                    "entrust_amount": amount,
-                    "stock_code": security,
-                    "entrust_bs": "买入",
-                    "entrust_type": "雪球虚拟委托",
-                    "entrust_status": "-",
-                }
-            ]
+            resjson = res.json()
+            result_code = resjson['result_code']
+            result_data = resjson['result_data']
+            return result_data
 
-    def buy(self, security, price=0, amount=0, volume=0, entrust_prop=0):
+
+    def buy(self, security, price=0, shares=0, amount=0, entrust_prop=0):
         """买入卖出股票
         :param security: 股票代码
         :param price: 买入价格
-        :param amount: 买入股数
-        :param volume: 买入总金额 由 volume / price 取整， 若指定 price 则此参数无效
+        :param shares: 买入股数
+        :param amount: 买入总金额
         :param entrust_prop:
         """
-        return self._trade(security, price, amount, volume, "buy")
+        return self._trade(security, price, shares, amount, "buy")
 
-    def sell(self, security, price=0, amount=0, volume=0, entrust_prop=0):
+    def sell(self, security, price=0, shares=0, amount=0, entrust_prop=0):
         """卖出股票
         :param security: 股票代码
         :param price: 卖出价格
-        :param amount: 卖出股数
-        :param volume: 卖出总金额 由 volume / price 取整， 若指定 price 则此参数无效
+        :param shares: 卖出股数
+        :param amount: 卖出总金额
         :param entrust_prop:
         """
-        return self._trade(security, price, amount, volume, "sell")
+        return self._trade(security, price, shares, amount, "sell")

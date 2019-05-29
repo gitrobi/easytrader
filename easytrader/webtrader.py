@@ -68,12 +68,12 @@ class WebTrader(metaclass=abc.ABCMeta):
             raise exceptions.NotLoginError(
                 "登录失败次数过多, 请检查密码是否正确 / 券商服务器是否处于维护中 / 网络连接是否正常"
             )
-        self.keepalive()
+        self.keep_alive()
 
     def login(self):
         pass
 
-    def keepalive(self):
+    def keep_alive(self):
         """启动保持在线的进程 """
         if self.heart_thread.is_alive():
             self.heart_active = True
