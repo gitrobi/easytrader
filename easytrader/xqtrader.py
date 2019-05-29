@@ -18,14 +18,14 @@ class XueQiuTrader(webtrader.WebTrader):
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) "
         "AppleWebKit/537.36 (KHTML, like Gecko) "
         "Chrome/64.0.3282.167 Safari/537.36",
-        "Host": "xueqiu.com",
+        "Host": "tc.xueqiu.com",
         "Pragma": "no-cache",
         "Connection": "keep-alive",
         "Accept": "*/*",
         "Accept-Encoding": "gzip, deflate, br",
         "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
         "Cache-Control": "no-cache",
-        "Referer": "https://xueqiu.com/P/ZH004612",
+        "Referer": "https://xueqiu.com/performance",
         "X-Requested-With": "XMLHttpRequest",
     }
 
@@ -122,23 +122,38 @@ class XueQiuTrader(webtrader.WebTrader):
             stock = stocks[0]
         return stock
 
-    def _get_portfolio_info(self, portfolio_code):
-        """
-        获取组合信息
-        :return: 字典
-        """
-        url = self.config["portfolio_url"] + portfolio_code
-        html = self._get_html(url)
-        match_info = re.search(r"(?<=SNB.cubeInfo = ).*(?=;\n)", html)
-        if match_info is None:
-            raise Exception(
-                "cant get portfolio info, portfolio html : {}".format(html)
-            )
-        try:
-            portfolio_info = json.loads(match_info.group())
-        except Exception as e:
-            raise Exception("get portfolio info error: {}".format(e))
-        return portfolio_info
+    def _get_portfolio_gid(self, portfolio_code):
+        """获取组合信息的gid"""
+        r = self.s.get(self.config["portfolio_gids"])
+        resjson = r.json()
+        result_code = resjson['result_code']
+        result_data = resjson['result_data']
+        if result_code == '60000':
+            trans_groups = result_data.get('trans_groups', None)
+
+        gid = None
+        if trans_groups is not None and len(trans_groups) >0:
+            for one in trans_groups:
+                if one['name'] == portfolio_code:
+                    gid = one['gid']
+                    break
+
+        if gid is None:
+            raise Exception("cannot get trans_groups gid for '%s'"(portfolio_code))
+        return gid
+
+    def _get_performances(self, portfolio_code):
+        gid = self._get_portfolio_gid(portfolio_code)
+        url = self.config["performances_url"] % (gid)
+        r = self.s.get(url)
+        resjson = r.json()
+        result_code = resjson['result_code']
+        result_data = resjson['result_data']
+        if result_code == '60000':
+            performances = result_data.get('performances', None)
+        if performances is None:
+            raise Exception("cannot get performances for '%s'"(portfolio_code))
+        return performances
 
     def get_balance(self):
         """
@@ -146,13 +161,12 @@ class XueQiuTrader(webtrader.WebTrader):
         :return:
         """
         portfolio_code = self.account_config.get("portfolio_code", "ch")
-        portfolio_info = self._get_portfolio_info(portfolio_code)
-        asset_balance = self._virtual_to_balance(
-            float(portfolio_info["net_value"])
-        )  # 总资产
-        position = portfolio_info["view_rebalancing"]  # 仓位结构
-        cash = asset_balance * float(position["cash"]) / 100
-        market = asset_balance - cash
+        performances = self._get_performances(portfolio_code)
+        performance = performances[1]
+        asset_balance = performance['assets']
+        position = performance['list']
+        cash = performance['cash']
+        market = performance['market_value']
         return [
             {
                 "asset_balance": asset_balance,
@@ -169,11 +183,11 @@ class XueQiuTrader(webtrader.WebTrader):
         获取雪球持仓
         :return:
         """
-        portfolio_code = self.account_config["portfolio_code"]
-        portfolio_info = self._get_portfolio_info(portfolio_code)
-        position = portfolio_info["view_rebalancing"]  # 仓位结构
-        stocks = position["holdings"]  # 持仓股票
-        return stocks
+        portfolio_code = self.account_config.get("portfolio_code", "ch")
+        performances = self._get_performances(portfolio_code)
+        performance = performances[1]
+        position = performance['list']
+        return position
 
     @staticmethod
     def _time_strftime(time_stamp):
@@ -193,19 +207,18 @@ class XueQiuTrader(webtrader.WebTrader):
         balance = self.get_balance()[0]
         position_list = []
         for pos in xq_positions:
-            volume = pos["weight"] * balance["asset_balance"] / 100
             position_list.append(
                 {
-                    "cost_price": volume / 100,
-                    "current_amount": 100,
-                    "enable_amount": 100,
-                    "income_balance": 0,
-                    "keep_cost_price": volume / 100,
-                    "last_price": volume / 100,
-                    "market_value": volume,
+                    "cost_price": pos['hold_cost'],
+                    "current_amount": pos['shares'],
+                    "enable_amount": pos['shares'],
+                    "income_balance": pos['accum_amount'],
+                    "keep_cost_price": pos['hold_cost'],
+                    "last_price": pos['current'],
+                    "market_value": pos['market_value'],
                     "position_str": "random",
-                    "stock_code": pos["stock_symbol"],
-                    "stock_name": pos["stock_name"],
+                    "stock_code": pos["symbol"],
+                    "stock_name": pos["name"],
                 }
             )
         return position_list

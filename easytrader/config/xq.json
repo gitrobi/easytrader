@@ -5,5 +5,8 @@
   "search_stock_url": "https://xueqiu.com/stock/p/search.json",
   "rebalance_url": "https://xueqiu.com/cubes/rebalancing/create.json",
   "history_url": "https://xueqiu.com/cubes/rebalancing/history.json",
-  "referer": "https://xueqiu.com/p/update?action=holdings&symbol=%s"
+  "referer": "https://xueqiu.com/p/update?action=holdings&symbol=%s",
+  "portfolio_gids": "https://tc.xueqiu.com/tc/snowx/MONI/trans_group/list.json",
+  "performances_url": "https://tc.xueqiu.com/tc/snowx//MONI/performances.json?gid=%s",
+  "trade_url": "https://tc.xueqiu.com/tc/snowx/MONI/transaction/add.json"
 }

@@ -1,0 +1,29 @@
+{
+  "result_data": {
+    "trans_groups": [
+      {
+        "id": null,
+        "name": "ZH0001",
+        "uid": null,
+        "cash": 0.0,
+        "gid": 3032888057637915,
+        "open_status": 0,
+        "default_id": 0,
+        "order_id": 1
+      },
+      {
+        "id": null,
+        "name": "ZH0002",
+        "uid": null,
+        "cash": 0.0,
+        "gid": 3032911965318786,
+        "open_status": 0,
+        "default_id": 0,
+        "order_id": 2
+      }
+    ]
+  },
+  "msg": null,
+  "result_code": "60000",
+  "success": true
+}
