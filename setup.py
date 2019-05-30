@@ -37,7 +37,7 @@ return::
        'enable_balance': '可用金额',
        'market_value': '证券市值',
        'money_type': '币种',
-       'pre_interest': '预计利息' ]}
+       'pre_interest': '预计利息' }]
 
     user.position
 

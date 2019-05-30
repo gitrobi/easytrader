@@ -6,9 +6,51 @@ import unittest
 
 sys.path.append(".")
 
-TEST_CLIENTS = os.environ.get("EZ_TEST_CLIENTS", "")
+TEST_CLIENTS = os.environ.get("EZ_TEST_CLIENTS", "ths")
 
 IS_WIN_PLATFORM = sys.platform != "darwin"
+IS_MAC_PLATFORM = sys.platform == "darwin"
+
+
+@unittest.skipUnless("ths" in TEST_CLIENTS and IS_MAC_PLATFORM, "skip yh test")
+class TestClientTrader(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        import easytrader
+
+        if "ths" not in TEST_CLIENTS:
+            return
+
+        # input your test account and password
+        cls._ACCOUNT = os.environ.get("EZ_TEST_YH_ACCOUNT") or "your account"
+        cls._PASSWORD = (
+            os.environ.get("EZ_TEST_YH_PASSWORD") or "your password"
+        )
+
+        cls._user = easytrader.use("ths")
+        cls._user.prepare(user=cls._ACCOUNT, password=cls._PASSWORD)
+
+    def test_balance(self):
+        time.sleep(3)
+        result = self._user.balance()
+
+    def test_position(self):
+        result = self._user.position()
+
+    def test_cancel_entrusts(self):
+        result = self._user.cancel_entrusts()
+
+    def test_invalid_buy(self):
+        import easytrader
+
+        with self.assertRaises(easytrader.exceptions.TradeError):
+            result = self._user.buy("511990", 100, 1e10000)
+
+    def test_invalid_sell(self):
+        import easytrader
+
+        with self.assertRaises(easytrader.exceptions.TradeError):
+            result = self._user.sell("162411", 200, 1e10000)
 
 
 @unittest.skipUnless("yh" in TEST_CLIENTS and IS_WIN_PLATFORM, "skip yh test")

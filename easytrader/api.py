@@ -1,17 +1,23 @@
 # -*- coding: utf-8 -*-
 import logging
+import sys
 
 from .log import log
 
 from easytrader.follower.joinquant_follower import JoinQuantFollower
 from easytrader.follower.ricequant_follower import RiceQuantFollower
 from easytrader.follower.xq_follower import XueQiuFollower
-
-from easytrader.trader.client.win.clienttrader import ClientTrader
-from easytrader.trader.client.win.gj_clienttrader import GJClientTrader
-from easytrader.trader.client.win.yh_clienttrader import YHClientTrader
-from easytrader.trader.client.win.ht_clienttrader import HTClientTrader
 from easytrader.trader.web.xq_webtrader import XueQiuWebTrader
+
+if not sys.platform.startswith("darwin"):
+    from easytrader.trader.client.win.clienttrader import ClientTrader
+    from easytrader.trader.client.win.gj_clienttrader import GJClientTrader
+    from easytrader.trader.client.win.yh_clienttrader import YHClientTrader
+    from easytrader.trader.client.win.ht_clienttrader import HTClientTrader
+else:
+    from easytrader.trader.client.mac.clienttrader import ClientTrader
+    from easytrader.trader.client.mac.yh_clienttrader import YHClientTrader
+
 
 
 def use(broker, debug=True, **kwargs):
