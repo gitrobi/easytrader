@@ -14,5 +14,8 @@ TODO list
  2) 将win实现重构
  3) 将mac实现集成进来
 
+2019/5/31
+TODO list
 2. 重构与easytrader相关的代码
- 
+ 1) 修改mac trader(ths, yh)的position和balance返回消息的格式
+ 2) 调通easyquant主要的测试案例
