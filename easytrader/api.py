@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import logging
-import six
 
 from .log import log
 
@@ -13,9 +12,6 @@ from easytrader.trader.client.win.gj_clienttrader import GJClientTrader
 from easytrader.trader.client.win.yh_clienttrader import YHClientTrader
 from easytrader.trader.client.win.ht_clienttrader import HTClientTrader
 from easytrader.trader.web.xq_webtrader import XueQiuWebTrader
-
-if six.PY2:
-    raise TypeError("不支持 Python2，请升级 Python3")
 
 
 def use(broker, debug=True, **kwargs):
