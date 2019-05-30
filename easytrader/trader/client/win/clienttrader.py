@@ -8,12 +8,13 @@ from typing import Type
 
 import easyutils
 
-from . import grid_strategies, helpers, pop_dialog_handler
-from .config import client
+from easytrader.trader.trader import BaseTrader
+from easytrader import helpers
+from easytrader.trader.client.win import pop_dialog_handler, grid_strategies, client
 
 if not sys.platform.startswith("darwin"):
     import pywinauto
-    import pywinauto.clipboard
+    #import pywinauto.clipboard
 
 
 class IClientTrader(abc.ABC):
@@ -46,7 +47,7 @@ class IClientTrader(abc.ABC):
         pass
 
 
-class ClientTrader(IClientTrader):
+class ClientTrader(BaseTrader, IClientTrader):
     # The strategy to use for getting grid data
     grid_strategy: Type[grid_strategies.IGridStrategy] = grid_strategies.Copy
 
@@ -130,6 +131,7 @@ class ClientTrader(IClientTrader):
 
         return self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
 
+    @property
     def cancel_entrust(self, entrust_no):
         self.refresh()
         for i, entrust in enumerate(self.cancel_entrusts):
@@ -141,11 +143,13 @@ class ClientTrader(IClientTrader):
                 return self._handle_pop_dialogs()
         return {"message": "委托单状态错误不能撤单, 该委托单可能已经成交或者已撤"}
 
+    @property
     def buy(self, security, price, amount, **kwargs):
         self._switch_left_menus(["买入[F1]"])
 
         return self.trade(security, price, amount)
 
+    @property
     def sell(self, security, price, amount, **kwargs):
         self._switch_left_menus(["卖出[F2]"])
 

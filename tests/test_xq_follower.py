@@ -5,10 +5,10 @@ import time
 import unittest
 from unittest import mock
 
-from easytrader.xq_follower import XueQiuFollower
+from easytrader.follower.xq_follower import XueQiuFollower
 
 
-class TestXueQiuTrader(unittest.TestCase):
+class TestXueQiuFollower(unittest.TestCase):
     def test_adjust_sell_amount_without_enable(self):
         follower = XueQiuFollower()
 

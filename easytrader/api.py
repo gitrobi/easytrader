@@ -1,13 +1,18 @@
 # -*- coding: utf-8 -*-
 import logging
-
 import six
 
-from .joinquant_follower import JoinQuantFollower
 from .log import log
-from .ricequant_follower import RiceQuantFollower
-from .xq_follower import XueQiuFollower
-from .xqtrader import XueQiuTrader
+
+from easytrader.follower.joinquant_follower import JoinQuantFollower
+from easytrader.follower.ricequant_follower import RiceQuantFollower
+from easytrader.follower.xq_follower import XueQiuFollower
+
+from easytrader.trader.client.win.clienttrader import ClientTrader
+from easytrader.trader.client.win.gj_clienttrader import GJClientTrader
+from easytrader.trader.client.win.yh_clienttrader import YHClientTrader
+from easytrader.trader.client.win.ht_clienttrader import HTClientTrader
+from easytrader.trader.web.xq_webtrader import XueQiuWebTrader
 
 if six.PY2:
     raise TypeError("不支持 Python2，请升级 Python3")
@@ -29,22 +34,14 @@ def use(broker, debug=True, **kwargs):
     if not debug:
         log.setLevel(logging.INFO)
     if broker.lower() in ["xq", "雪球"]:
-        return XueQiuTrader(**kwargs)
+        return XueQiuWebTrader(**kwargs)
     if broker.lower() in ["yh_client", "银河客户端"]:
-        from .yh_clienttrader import YHClientTrader
-
         return YHClientTrader()
     if broker.lower() in ["ht_client", "华泰客户端"]:
-        from .ht_clienttrader import HTClientTrader
-
         return HTClientTrader()
     if broker.lower() in ["gj_client", "国金客户端"]:
-        from .gj_clienttrader import GJClientTrader
-
         return GJClientTrader()
     if broker.lower() in ["ths", "同花顺客户端"]:
-        from .clienttrader import ClientTrader
-
         return ClientTrader()
 
     raise NotImplementedError

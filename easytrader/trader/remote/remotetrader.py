@@ -1,14 +1,16 @@
-# -*- coding: utf-8 -*-
+  # -*- coding: utf-8 -*-
 import requests
 
-from . import helpers
+from easytrader import helpers
+
+from easytrader.trader.trader import BaseTrader
 
 
 def use(broker, host, port=1430, **kwargs):
-    return RemoteClient(broker, host, port)
+    return RemoteTrader(broker, host, port)
 
 
-class RemoteClient:
+class RemoteTrader(BaseTrader):
     def __init__(self, broker, host, port=1430, **kwargs):
         self._s = requests.session()
         self._api = "http://{}:{}".format(host, port)

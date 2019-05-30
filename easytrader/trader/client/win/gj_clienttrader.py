@@ -4,9 +4,10 @@ import tempfile
 import time
 
 import pywinauto
-import pywinauto.clipboard
+#import pywinauto.clipboard
 
-from . import clienttrader, helpers
+from easytrader import helpers
+from easytrader.trader.client.win import clienttrader
 
 
 class GJClientTrader(clienttrader.BaseLoginClientTrader):

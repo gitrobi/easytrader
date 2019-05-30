@@ -2,12 +2,12 @@
 import unittest
 
 from easytrader.exceptions import TradeError
-from easytrader.xqtrader import XueQiuTrader
+from easytrader.trader.web.xq_webtrader import XueQiuWebTrader
 
 
-class TestXueQiuTrader(unittest.TestCase):
+class TestXueQiuWebTrader(unittest.TestCase):
     def test_prepare_account(self):
-        user = XueQiuTrader()
+        user = XueQiuWebTrader()
         params_without_cookies = dict(
             portfolio_code="ZH123456", portfolio_market="cn"
         )
@@ -19,13 +19,13 @@ class TestXueQiuTrader(unittest.TestCase):
         self.assertEqual(params_without_cookies, user.account_config)
 
     def test_get_balance(self):
-        user = XueQiuTrader()
+        user = XueQiuWebTrader()
         user.prepare('../xq.json')
         balance = user.get_balance()
         self.assertIsNotNone(balance)
 
     def test_buy(self):
-        user = XueQiuTrader()
+        user = XueQiuWebTrader()
         user.prepare('../xq.json')
 
         security = 'SZ159901'
@@ -36,7 +36,7 @@ class TestXueQiuTrader(unittest.TestCase):
         self.assertIsNotNone(result['gid'], user._gid)
 
     def test_sell(self):
-        user = XueQiuTrader()
+        user = XueQiuWebTrader()
         user.prepare('../xq.json')
 
         security = 'SZ159901'

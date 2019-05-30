@@ -1,19 +1,18 @@
 # -*- coding: utf-8 -*-
-import json
 import numbers
 import os
-import re
 import time
 import datetime
 
 import requests
 
-from . import exceptions, helpers, webtrader
-from .log import log
+from easytrader import exceptions, helpers
+from easytrader.trader.web import webtrader
+from easytrader.log import log
 
 
-class XueQiuTrader(webtrader.WebTrader):
-    config_path = os.path.dirname(__file__) + "/config/xq.json"
+class XueQiuWebTrader(webtrader.WebTrader):
+    config_path = os.path.dirname(__file__) + "/xq.json"
 
     @staticmethod
     def _time_strftime(time_stamp):
@@ -40,7 +39,7 @@ class XueQiuTrader(webtrader.WebTrader):
     }
 
     def __init__(self, **kwargs):
-        super(XueQiuTrader, self).__init__()
+        super(XueQiuWebTrader, self).__init__()
 
         # 资金换算倍数
         self.multiple = (
@@ -199,6 +198,14 @@ class XueQiuTrader(webtrader.WebTrader):
         log.warning("雪球新版不支持委托")
         return None
 
+    def cancel_entrusts(self):
+        """
+        对未成交的调仓进行伪撤单
+        :return:
+        """
+        log.warning("雪球新版不支持委托")
+        return True
+
     def cancel_entrust(self, entrust_no):
         """
         对未成交的调仓进行伪撤单
@@ -287,7 +294,6 @@ class XueQiuTrader(webtrader.WebTrader):
             result_code = resjson['result_code']
             result_data = resjson['result_data']
             return result_data
-
 
     def buy(self, security, price=0, shares=0, amount=0, entrust_prop=0):
         """买入卖出股票

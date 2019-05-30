@@ -3,8 +3,8 @@
 from datetime import datetime
 from threading import Thread
 
-from .follower import BaseFollower
-from .log import log
+from easytrader.follower.follower import BaseFollower
+from easytrader.log import log
 
 
 class RiceQuantFollower(BaseFollower):

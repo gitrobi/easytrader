@@ -5,13 +5,13 @@ import tempfile
 from typing import TYPE_CHECKING, Dict, List
 
 import pandas as pd
-import pywinauto.clipboard
+# import pywinauto.clipboard
 
-from .log import log
+from easytrader.log import log
 
 if TYPE_CHECKING:
     # pylint: disable=unused-import
-    from . import clienttrader
+    from easytrader.trader.client.win import clienttrader
 
 
 class IGridStrategy(abc.ABC):
@@ -68,7 +68,8 @@ class Copy(BaseStrategy):
     def _get_clipboard_data(self) -> str:
         while True:
             try:
-                return pywinauto.clipboard.GetData()
+                #return pywinauto.clipboard.GetData()
+                return None # robi TODO
             # pylint: disable=broad-except
             except Exception as e:
                 log.warning("%s, retry ......", e)

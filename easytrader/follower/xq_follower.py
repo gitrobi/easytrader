@@ -7,9 +7,9 @@ from datetime import datetime
 from numbers import Number
 from threading import Thread
 
-from . import helpers
-from .follower import BaseFollower
-from .log import log
+from easytrader import helpers
+from easytrader.follower.follower import BaseFollower
+from easytrader.log import log
 
 
 class XueQiuFollower(BaseFollower):

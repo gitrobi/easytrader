@@ -3,7 +3,7 @@ import re
 import time
 from typing import Optional
 
-from . import exceptions
+from easytrader import exceptions
 
 
 class PopDialogHandler:

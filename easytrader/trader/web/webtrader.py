@@ -9,13 +9,14 @@ from threading import Thread
 import requests
 import requests.exceptions
 
-from . import exceptions, helpers
-from .log import log
+from easytrader.trader.trader import BaseTrader
+from easytrader import exceptions, helpers
+from easytrader.log import log
 
 
 # noinspection PyIncorrectDocstring
-class WebTrader(metaclass=abc.ABCMeta):
-    global_config_path = os.path.dirname(__file__) + "/config/global.json"
+class WebTrader(BaseTrader):
+    global_config_path = os.path.dirname(__file__) + "/global.json"
     config_path = ""
 
     def __init__(self, debug=True):
@@ -135,7 +136,6 @@ class WebTrader(metaclass=abc.ABCMeta):
         """获取持仓"""
         return self.do(self.config["position"])
 
-    @property
     def entrust(self):
         return self.get_entrust()
 
@@ -143,7 +143,6 @@ class WebTrader(metaclass=abc.ABCMeta):
         """获取当日委托列表"""
         return self.do(self.config["entrust"])
 
-    @property
     def current_deal(self):
         return self.get_current_deal()
 
@@ -152,7 +151,6 @@ class WebTrader(metaclass=abc.ABCMeta):
         # return self.do(self.config['current_deal'])
         log.warning("目前仅在 佣金宝/银河子类 中实现, 其余券商需要补充")
 
-    @property
     def exchangebill(self):
         """
         默认提供最近30天的交割单, 通常只能返回查询日期内最新的 90 天数据。

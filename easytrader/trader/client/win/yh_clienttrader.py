@@ -4,7 +4,8 @@ import tempfile
 
 import pywinauto
 
-from . import clienttrader, grid_strategies, helpers
+from easytrader import helpers
+from easytrader.trader.client.win import clienttrader, grid_strategies
 
 
 class YHClientTrader(clienttrader.BaseLoginClientTrader):
