@@ -481,7 +481,7 @@ class YHClientTrader(BaseTrader):
 	def __init__(self):
 		pass
 
-	def prepare(self, config_path=None, user=None, password=None, exe_path=None, comm_password=None, **kwargs):
+	def prepare(self, **kwargs):
 		pass
 
 	def exit(self):
@@ -493,27 +493,25 @@ class YHClientTrader(BaseTrader):
 		return result
 
 	# ----------------------------------------------------------------------------------
-	def buy(self, para, isdo=False):
-		stock_code, price, count = para[0], para[1], para[2]
+	def buy(self, security, price, shares, isdo=False):
 		start = time.time()
-		print("###BUY### start -- %s:%s:%s" % (stock_code, price, count))
-		result = scpt.call('buy_entrust', [stock_code, price, count], isdo)
+		print("###BUY### start -- %s:%s:%s" % (security, price, shares))
+		result = scpt.call('buy_entrust', [security, str(price), str(shares)], isdo)
 		print("###BUY### %s" % (self.formatResult(result)))
 		print("###BUY### end -- ", round(time.time() - start, 2), "seconds")
 		return result
 
 	# ----------------------------------------------------------------------------------
-	def sell(self, para, isdo=False):
-		stock_code, price, count = para[0], para[1], para[2]
+	def sell(self, security, price, shares, isdo=False):
 		start = time.time()
-		print("###SEL### start -- %s:%s:%s" % (stock_code, price, count))
-		result = scpt.call('sell_entrust', [stock_code, price, count], isdo)
+		print("###SEL### start -- %s:%s:%s" % (security, price, shares))
+		result = scpt.call('sell_entrust', [security, str(price), str(shares)], isdo)
 		print("###SEL### %s" % (self.formatResult(result)))
 		print("###SEL### end -- ", round(time.time() - start, 2), "seconds")
 		return result
 
 	def cancel_entrusts(self):
-		self.cancel_entrust(para=None)
+		return self.cancel_entrust(para=None)
 
 	# ----------------------------------------------------------------------------------
 	def cancel_entrust(self, para=None, isdo=False):
@@ -525,6 +523,7 @@ class YHClientTrader(BaseTrader):
 		return result
 
 	# ----------------------------------------------------------------------------------
+	@property
 	def balance(self):
 		start = time.time()
 		print("###ASS### start -- query assets")
@@ -552,6 +551,7 @@ class YHClientTrader(BaseTrader):
 		print("###ASS### end -- ", round(time.time() - start, 2), "seconds")
 		return result
 
+	@property
 	def position(self):
 		return self.balance()
 

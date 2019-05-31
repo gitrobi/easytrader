@@ -241,7 +241,7 @@ class Positon :
 
 class ClientTrader(BaseTrader):
 
-    def prepare(self, config_path=None, user=None, password=None, exe_path=None, comm_password=None, **kwargs):
+    def prepare(self, **kwargs):
         pass
 
     def exit(self):
