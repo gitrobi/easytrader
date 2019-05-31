@@ -32,10 +32,11 @@ class TestClientTrader(unittest.TestCase):
 
     def test_balance(self):
         time.sleep(3)
-        result = self._user.balance()
+        result = self._user.balance
 
     def test_position(self):
-        result = self._user.position()
+        result = self._user.position
+        print(result)
 
     def test_cancel_entrusts(self):
         result = self._user.cancel_entrusts()

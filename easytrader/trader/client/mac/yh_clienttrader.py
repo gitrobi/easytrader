@@ -481,7 +481,13 @@ class YHClientTrader(BaseTrader):
 	def __init__(self):
 		pass
 
-	def prepare(self, **kwargs):
+	def prepare(self,
+        config_path=None,
+        user=None,
+        password=None,
+        exe_path=None,
+        comm_password=None,
+        **kwargs):
 		pass
 
 	def exit(self):
