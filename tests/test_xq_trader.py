@@ -41,7 +41,7 @@ class TestXueQiuWebTrader(unittest.TestCase):
 
         security = 'SZ159901'
         price = 4.282
-        shares = 200
+        shares = 800
         try:
             result = user.sell(security, price, shares)
             self.assertEqual(result['amount'], 428.2)
@@ -59,7 +59,7 @@ class TestXueQiuWebTrader(unittest.TestCase):
             self.assertEqual(result['amount'], 428.2)
             self.assertIsNotNone(result['gid'], user._gid)
         except TradeError as te:
-            self.assertEqual(str(te), "操作数量大于实际可卖出数量")
+            self.assertEqual(str(te), "没有持有要卖出的股票")
 
 
 

@@ -195,7 +195,7 @@ class XueQiuWebTrader(webtrader.WebTrader):
                  'last_price': item['current'],
                  'market_value': item['market_value'],
                  'position_str': '',
-                 'stock_code': item['symbol'],
+                 'stock_code': item['symbol'].lower(),
                  'stock_name': item['name']}
             )
         return xq_positions
@@ -268,7 +268,7 @@ class XueQiuWebTrader(webtrader.WebTrader):
         # 调整后的持仓
         is_have = False
         for position in position_list:
-            if position["stock_code"] == stock["code"]:
+            if position["stock_code"] == stock["code"].lower():
                 is_have = True
                 old_shares = position["enable_amount"]
                 if entrust_bs == "sell":
