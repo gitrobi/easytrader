@@ -181,7 +181,23 @@ class XueQiuWebTrader(webtrader.WebTrader):
         """
         performances = self._get_performances()
         performance = performances[1]
-        xq_positions = performance['list']
+        p_list = performance['list']
+        xq_positions = []
+        for item in p_list:
+            if item['shares'] <= 0:
+                continue
+            xq_positions.append(
+                {'cost_price': item['diluted_cost'],
+                 'current_amount': item['shares'],
+                 'enable_amount': item['shares'],
+                 'income_balance': item['accum_amount'],
+                 'keep_cost_price': item['hold_cost'],
+                 'last_price': item['current'],
+                 'market_value': item['market_value'],
+                 'position_str': '',
+                 'stock_code': item['symbol'],
+                 'stock_name': item['name']}
+            )
         return xq_positions
 
     @property
@@ -252,9 +268,9 @@ class XueQiuWebTrader(webtrader.WebTrader):
         # 调整后的持仓
         is_have = False
         for position in position_list:
-            if position["symbol"] == stock["code"]:
+            if position["stock_code"] == stock["code"]:
                 is_have = True
-                old_shares = position["shares"]
+                old_shares = position["enable_amount"]
                 if entrust_bs == "sell":
                     if shares > old_shares:
                         raise exceptions.TradeError(u"操作数量大于实际可卖出数量")
